@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FORM from "../../assets/img/Form.png";
 import Swal from 'sweetalert2'
@@ -12,9 +12,19 @@ const Login = () => {
     const [password, setPassword] = useState("demog@ll0")
     const [userName, setUserName] = useState("")
     const [dpiValue, setDpiValue] = useState("")
+    const [userValue, setUserValue] = useState("")
+    const [passwordValue, setPasswordValue] = useState("")
+    const [password2Value, setPassword2Value] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [isRegister, setIsRegister] = useState(false)
-    const Login = async () => {
+    const [dataDivision, setDataDivision] = useState([])
+    const [divisionSelected, setDivisionSelected] = useState(null)
+    const [dataArea, setDataArea] = useState([])
+    const [areaSelected, setAreaSelected] = useState(null)
+    const [dataAgency, setDataAgency] = useState([])
+    const [agencySelected, setAgencySelected] = useState(null)
+
+    const handleLogin = async () => {
         try {
             setIsLoading(true)
             const login = await axios.post("http://localhost:4500/settings/v1/user/login", { user, password })
@@ -35,6 +45,129 @@ const Login = () => {
             console.log("[ ERROR LOGIN ] =>", error)
         }
     }
+
+    const handleRegister = async () => {
+        try {
+            let stringArray = ["userName", "dpiValue", "userValue", "passwordValue", "password2Value"]
+            let nullArray = ["divisionSelected", "areaSelected", "agencySelected"]
+            let data = {
+                userName,
+                dpiValue,
+                userValue,
+                passwordValue,
+                password2Value,
+                divisionSelected,
+                areaSelected,
+                agencySelected
+            };
+            if (
+                stringArray.filter((item) => data[item] === "").length > 0 ||
+                nullArray.filter((item) => data[item] === null).length > 0
+            ) {
+                MySwal.fire({
+                    title: "¡Atención!",
+                    text: "Todos los campos son obligatorios",
+                    icon: "info"
+                });
+            } else if (passwordValue !== password2Value) {
+                MySwal.fire({
+                    title: "¡Atención!",
+                    text: "La contraseña no coincide",
+                    icon: "info"
+                });
+            } else {
+                setIsLoading(true)
+                const register = await axios.post("http://localhost:4500/settings/v1/user", {
+                    idRole: 1,
+                    name: data.userName,
+                    user: data.userValue,
+                    password: data.passwordValue
+                })
+                console.log("[ REGISTER ]", register.data);
+                if (!register.data?.error) {
+                    setIsLoading(false)
+                    navigate("/home")
+                } else {
+                    setIsLoading(false)
+                    MySwal.fire({
+                        title: "¡Atención!",
+                        text: register.data.message || "comuniquese con el administrador",
+                        icon: "info"
+                    });
+                }
+            }
+        } catch (error) {
+            console.log("[ REGISTER ERROR ]", error);
+        }
+    }
+
+    const getDivisions = async () => {
+        try {
+            const request = await axios.get("http://localhost:4500/settings/v1/division")
+            if (!request.data?.error) {
+                console.log("[ DIVISIONS ] =>", request.data)
+                setDataDivision(request.data)
+            } else {
+                MySwal.fire({
+                    title: "¡Atención!",
+                    text: request.data.message || "comuniquese con el administrador",
+                    icon: "info"
+                });
+            }
+        } catch (error) {
+            console.log("[ ERROR LOGIN ] =>", error)
+        }
+    }
+
+    const getAreas = async () => {
+        try {
+            const request = await axios.get("http://localhost:4500/settings/v1/area")
+            if (!request.data?.error) {
+                console.log("[ AREAS ] =>", request.data)
+                setDataArea(request.data)
+            } else {
+                MySwal.fire({
+                    title: "¡Atención!",
+                    text: request.data.message || "comuniquese con el administrador",
+                    icon: "info"
+                });
+            }
+        } catch (error) {
+            console.log("[ ERROR LOGIN ] =>", error)
+        }
+    }
+
+    const getAgency = async () => {
+        try {
+            const request = await axios.get(`http://localhost:4500/settings/v1/agency/area/${areaSelected}`)
+            if (!request.data?.error) {
+                console.log("[ AGENCY AREAS ] =>", request.data)
+                setDataAgency(request.data)
+            } else {
+                MySwal.fire({
+                    title: "¡Atención!",
+                    text: request.data.message || "comuniquese con el administrador",
+                    icon: "info"
+                });
+            }
+        } catch (error) {
+            console.log("[ ERROR LOGIN ] =>", error)
+        }
+    }
+
+    useEffect(() => {
+        if (isRegister) {
+            getDivisions()
+            getAreas()
+        }
+    }, [isRegister])
+
+    useEffect(() => {
+        if (areaSelected !== null && parseInt(areaSelected) !== 0) {
+            getAgency()
+        } else setAgencySelected(null)
+    }, [areaSelected])
+
     return (
         <>
             <header className="text-center text-white d-none d-lg-flex position-relative" style={{ backgroundColor: "#E70202" }}>
@@ -101,7 +234,7 @@ const Login = () => {
                                                             type="button"
                                                             style={{ backgroundColor: "#810000", borderColor: "#810000", paddingInline: "20%" }}
                                                             className="btn btn-primary btn-md mt-4"
-                                                            onClick={Login}
+                                                            onClick={handleLogin}
                                                             disabled={isLoading}
                                                         >
                                                             {
@@ -162,6 +295,8 @@ const Login = () => {
                                                             type="text"
                                                             placeholder="Usuario"
                                                             aria-label=".form-control-sm example"
+                                                            value={userValue}
+                                                            onChange={({ target }) => setUserValue(target.value)}
                                                         />
                                                     </div>
                                                     <div className="mt-2">
@@ -171,6 +306,8 @@ const Login = () => {
                                                             type="password"
                                                             placeholder="constraseña"
                                                             aria-label=".form-control-sm example"
+                                                            value={passwordValue}
+                                                            onChange={({ target }) => setPasswordValue(target.value)}
                                                         />
                                                     </div>
                                                     <div className="mt-2">
@@ -180,13 +317,77 @@ const Login = () => {
                                                             type="password"
                                                             placeholder="confirmar contraseña"
                                                             aria-label=".form-control-sm example"
+                                                            value={password2Value}
+                                                            onChange={({ target }) => setPassword2Value(target.value)}
                                                         />
                                                     </div>
+                                                    <div className="mt-2">
+                                                        <label className="form-label fw-semibold">División</label>
+                                                        <select
+                                                            className="form-select rounded-pill"
+                                                            aria-label="Default select example"
+                                                            onChange={(e) => setDivisionSelected(e.target.value)}
+                                                        >
+                                                            <option key={"D-0"} value={0} onClick={() => setDivisionSelected(null)}>
+                                                                <span className="dropdown-item"></span>
+                                                            </option>
+                                                            {
+                                                                dataDivision.map((item) => (
+                                                                    <option key={`D-${item.idDivision}`} value={item.idDivision} onClick={() => setDivisionSelected(item.idDivision)}>
+                                                                        <span className="dropdown-item">{item.name}</span>
+                                                                    </option>
+                                                                ))
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    <div className="mt-2">
+                                                        <label className="form-label fw-semibold">Area</label>
+                                                        <select
+                                                            className="form-select rounded-pill"
+                                                            aria-label="Default select example"
+                                                            onChange={(e) => setAreaSelected(e.target.value)}
+                                                        >
+                                                            <option key={"A-0"} value={0} onClick={() => setAreaSelected(null)}>
+                                                                <span className="dropdown-item"></span>
+                                                            </option>
+                                                            {
+                                                                dataArea.map((item) => (
+                                                                    <option key={`A-${item.idArea}`} value={item.idArea} onClick={() => setAreaSelected(item.idArea)}>
+                                                                        <span className="dropdown-item">{item.name}</span>
+                                                                    </option>
+                                                                ))
+                                                            }
+                                                        </select>
+                                                    </div>
+                                                    {
+                                                        areaSelected !== null && parseInt(areaSelected) !== 0 && (
+                                                            <div className="mt-2">
+                                                                <label className="form-label fw-semibold">Agencia</label>
+                                                                <select
+                                                                    className="form-select rounded-pill"
+                                                                    aria-label="Default select example"
+                                                                    onChange={(e) => setAgencySelected(e.target.value)}
+                                                                >
+                                                                    <option key={"AG-0"} value={0} onClick={() => setAgencySelected(null)}>
+                                                                        <span className="dropdown-item"></span>
+                                                                    </option>
+                                                                    {
+                                                                        dataAgency.map((item) => (
+                                                                            <option key={`AG-${item.idAgency}`} value={item.idAgency} onClick={() => setAreaSelected(item.idAgency)}>
+                                                                                <span className="dropdown-item">{item.name}</span>
+                                                                            </option>
+                                                                        ))
+                                                                    }
+                                                                </select>
+                                                            </div>
+                                                        )
+                                                    }
                                                     <div className="text-center mt-5">
                                                         <button
                                                             type="button"
                                                             style={{ backgroundColor: "#810000", borderColor: "#810000", paddingInline: "20%" }}
                                                             className="btn btn-primary btn-md"
+                                                            onClick={handleRegister}
                                                         >
                                                             Registrar
                                                         </button>
