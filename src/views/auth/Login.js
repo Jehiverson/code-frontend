@@ -8,8 +8,8 @@ const MySwal = withReactContent(Swal)
 
 const Login = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState("demogallo")
-    const [password, setPassword] = useState("demog@ll0")
+    const [user, setUser] = useState("Jehi")
+    const [password, setPassword] = useState("221144")
     const [userName, setUserName] = useState("")
     const [dpiValue, setDpiValue] = useState("")
     const [userValue, setUserValue] = useState("")
@@ -28,10 +28,11 @@ const Login = () => {
         try {
             setIsLoading(true)
             const login = await axios.post("http://localhost:4500/settings/v1/user/login", { user, password })
-            console.log("LOGIN", login.data);
+            console.log("LOGIN", login.data.userData.dataUser);
             if (!login.data?.error) {
-                setIsLoading(false)
-                navigate("/home")
+                localStorage.setItem("@user", JSON.stringify(login.data.userData.dataUser));
+                setIsLoading(false);
+                navigate("/home");
             } else {
                 setIsLoading(false)
                 MySwal.fire({

@@ -1,52 +1,20 @@
 import { useEffect, useRef, useState } from "react";
-import Presentation from "./Presentation";
 
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
+import { useParams } from "react-router-dom";
+import axios from "axios";
+
+import Presentation from "./Presentation";
 import Accordion from "../../components/Accordion";
 import QuizComponent from "../../components/QuizComponent";
 import MenuComponent from "../../components/MenuComponent";
 import HeaderComponent from "../../components/HeaderComponent";
 import CountdownComponent from "../../components/CountdownComponent";
 
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
-import { useParams } from "react-router-dom";
-import axios from "axios";
-const MySwal = withReactContent(Swal)
+import { getAttempts, setDataUserAnswer, setUserQuiz, putUserQuiz } from "../../services/quizFnc.js";
 
-// const questions = [
-//     {
-//         question: '¿Cuál de estas opciones pertenece a las 4 formas de vender más?',
-//         answers: [
-//             'Vender productos que el cliente no necesita',
-//             'Vender más de lo mismo',
-//             'Buscar clientes mayoristas'],
-//         correctIndex: [1], // La respuesta correcta está en la posición 1 (Madrid)
-//     },
-//     {
-//         question: '¿Up-Selling significa, vender productos de menor valor?',
-//         answers: ['Verdadero', 'Falso'],
-//         correctIndex: [1], // La respuesta correcta está en la posición 0 (Amazonas)
-//     },
-//     {
-//         question: '¿Cross-Selling - venta cruzada, significa vender todas las presentaciones de la misma marca?',
-//         answers: ['Verdadero', 'Falso'],
-//         correctIndex: [1], // La respuesta correcta está en la posición 1 (8)
-//     },
-//     {
-//         question: '¿Drop size, significa ?',
-//         answers: ['Presentaciones', 'Categorías', 'Ticket promedio'],
-//         correctIndex: [2], // La respuesta correcta está en la posición 0 (Gabriel García Márquez)
-//     },
-//     {
-//         question: '¿El nombre del cliente significa?',
-//         answers: [
-//             'Cultura',
-//             'Identidad personal',
-//             'Ideología'
-//         ],
-//         correctIndex: [1], // La respuesta correcta está en la posición 0 (1945)
-//     }
-// ];
+const MySwal = withReactContent(Swal);
 
 const CoursePage = () => {
     const { id } = useParams();
@@ -54,7 +22,7 @@ const CoursePage = () => {
     const [dataPresentation, setDataPresentation] = useState([])
     const [questions, setDataQuestion] = useState([])
     const [totalProgress, setTotalProgress] = useState(0);
-    const [userAnswers, setUserAnswers] = useState(Array(questions.length).fill(null));
+    const [userAnswers, setUserAnswers] = useState();
     const [currentQuestion, setCurrentQuestion] = useState(-1);
     const [correctCount, setCorrectCount] = useState(0);
     const [incorrectCount, setIncorrectCount] = useState(0);
@@ -65,6 +33,10 @@ const CoursePage = () => {
     const [timerRestart, setTimerRestart] = useState(false);
     const [time, setTotalTime] = useState(0)
     const [minimNote, setMinimNote] = useState(0);
+    
+    const [userData, setUserData] = useState(null);
+    const [attemptsUserQuiz, setAttemptsUserQuiz] = useState({attempt: 1});
+
     const counterRef = useRef(null)
 
     const completeTimer = () => {
@@ -80,16 +52,18 @@ const CoursePage = () => {
     }
 
     const handleAnswerClick = (answerIndex) => {
+        console.log("----1---",answerIndex);
         if (userAnswers[currentQuestion] === null) {
+            console.log("----2---",userAnswers);
             const isCorrect = questions[currentQuestion].correctIndex.includes(answerIndex);
             setSelectedAnswer(answerIndex);
 
             setUserAnswers((prevUserAnswers) => {
                 const newUserAnswers = [...prevUserAnswers];
-                newUserAnswers[currentQuestion] = isCorrect ? 'correct' : 'incorrect';
+                newUserAnswers[currentQuestion] = isCorrect ? {response: 'correct', index: answerIndex} : {response: 'incorrect', index: answerIndex};
                 return newUserAnswers;
             });
-
+            console.log("----3---");
             if (isCorrect) {
                 setCorrectCount((prevCorrectCount) => prevCorrectCount + 1);
             } else {
@@ -111,14 +85,58 @@ const CoursePage = () => {
         setCurrentQuestion((prevCorrectCount) => prevCorrectCount + 1);
     }
 
-    const handleFinishQuiz = () => {
+    const handleFinishQuiz = async () => {
         // Contar las preguntas no respondidas
         const unanswered = userAnswers.filter((answer) => answer === null).length;
         setUnansweredCount(unanswered);
 
         // Finalizar el quiz
         setQuizCompleted(true);
-        setTimerStart(false)
+        setTimerStart(false);
+
+        /* const attemptsUserQuiz = await getAttempts(userData.idUser, questions[0].idQuestion);
+        console.log("INTENTOS DATA",attemptsUserQuiz) */
+        const attemptsUser = attemptsUserQuiz.attempts?(attemptsUserQuiz.attempts + 1):1;
+        let dataQuiz = {idUser:userData.idUser, idQuiz: questions[0].idQuestion, attempts:attemptsUser};
+        let dataInsertQuiz = [];
+
+        userAnswers.map(((item, index) => {
+            console.log(item);
+            const questionData = questions[index];
+            const answerData = questions[index].answers[item.index];
+
+            dataInsertQuiz.push({
+                idUser:userData.idUser,
+                idQuestion: questionData.idQuestion,
+                idAnswer: answerData.idAnswer,
+                attempt:attemptsUserQuiz.attempts + 1
+            });
+
+        }));
+
+        let timerInterval;
+        Swal.fire({
+        title: "Validando respuestas...",
+        timer: 5000,
+        timerProgressBar: true
+        });
+
+        const dataAnswers = await setDataUserAnswer(dataInsertQuiz);
+        const dataUserQuiz = attemptsUserQuiz.attempts? await putUserQuiz(userData.idUser, questions[0].idQuestion, {attempts: attemptsUser}) : await setUserQuiz(dataQuiz);
+
+        if(dataAnswers && dataUserQuiz){
+            Swal.fire({
+                icon: "success",
+                title: "Completado",
+                text: "Tus resultados se mostraran en pantalla",
+              });
+        }else{
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "No se han podido registrar tus datos prueba mas tarde.",
+              });
+        }
     };
 
     const handleResetQuestion = () => {
@@ -135,7 +153,12 @@ const CoursePage = () => {
 
     const getInfoModule = async () => {
         try {
-            const quizReq = await axios.get(`http://localhost:4500/quiz/v1/quiz/${id}`)
+            console.log("GET DATOS")
+            const datosUser = JSON.parse(localStorage.getItem("@user"));
+            console.log("Usuario", datosUser);
+            setUserData(datosUser);
+        
+            const quizReq = await axios.get(`http://localhost:4500/quiz/v1/quiz/${id}`);
             console.log("Q", quizReq);
             if (quizReq?.data) {
                 let duration = quizReq.data.durationTime * 60 || 0
@@ -153,18 +176,25 @@ const CoursePage = () => {
                             let arrayAnswer = []
                             let arrayCorrectAnswer = []
                             item.Answers.forEach((answer, index) => {
-                                arrayAnswer.push(answer.description)
+                                arrayAnswer.push({idAnswer: answer.idAnswers, description: answer.description})
                                 if (answer.isCorrect) arrayCorrectAnswer.push(index)
                             })
 
                             array.push({
+                                idQuestion: item.idQuestion,
                                 question: item.description,
                                 answers: arrayAnswer,
                                 correctIndex: arrayCorrectAnswer
                             })
                         })
 
-                        setDataQuestion(array)
+                        console.log(questionReq);
+
+                        setDataQuestion(array);
+                        setUserAnswers(Array(array.length).fill(null));
+                        const attemptsUserQuizget = await getAttempts(datosUser.idUser, quizReq.data.idQuiz);
+                        console.log("INTENTOS DATA",attemptsUserQuizget.data, quizReq.data)
+                        setAttemptsUserQuiz(attemptsUserQuizget.data);
                     }
                 }
             }
@@ -232,6 +262,8 @@ const CoursePage = () => {
                         content={
                             <div className="container border p-2">
                                 <QuizComponent
+                                    dataQuiz={dataQuiz}
+                                    attemptsUserQuiz={attemptsUserQuiz}
                                     counterRef={counterRef}
                                     questions={questions}
                                     setTotalProgress={setTotalProgress}

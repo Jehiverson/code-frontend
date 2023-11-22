@@ -27,8 +27,8 @@ import ReactPlayer from "react-player";
 // ]
 
 const Presentation = ({ files = [] }) => {
-    const [currentSlide, setCurrentSlide] = useState(0)
-    const videoRef = useRef(null)
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const videoRef = useRef(null);
 
     useEffect(() => {
         if (videoRef.current) {

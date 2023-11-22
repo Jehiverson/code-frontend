@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import "./styles.css"
 
 const QuizComponent = ({
+    dataQuiz,
+    attemptsUserQuiz,
     questions = [],
     userAnswers,
     currentQuestion,
@@ -32,13 +34,20 @@ const QuizComponent = ({
                         <>
                             <h2 className='mt-3'>¡No has superado el curso!</h2>
                             <h3 className='my-3'><b>El puntaje mínimo es del 80%, contacta a tu supervisor para más indicaciones.</b></h3>
-                            <button
-                                className='btn btn-sm text-white mb-3'
-                                style={{ backgroundColor: '#810000' }}
-                                onClick={handleResetQuestion}
-                            >
-                                Repetir Cuestionario
-                            </button>
+                            {console.log("??¡?¡?¡22?¡?¡?¡??",dataQuiz.attempts, attemptsUserQuiz.attempts)}
+                            {
+                                dataQuiz.attempts > (attemptsUserQuiz.attempts + 1)?(
+                                    <button
+                                        className='btn btn-sm text-white mb-3'
+                                        style={{ backgroundColor: '#810000' }}
+                                        onClick={handleResetQuestion}
+                                    >
+                                        Repetir Cuestionario
+                                    </button>
+                                ):(
+                                    <h5><b>{"Ya no tienes oportunidades en este modulo"}</b></h5>
+                                )
+                            }
                         </>
                     )
                 }
@@ -57,13 +66,21 @@ const QuizComponent = ({
                             <h5><b>{"Bienvenido a tu Módulo 1"}</b></h5>
                             <p>Marque el o los incisos con la respuesta correcta.</p>
                             <div className='d-flex justify-content-center m-3'>
-                                <button
-                                    className='btn btn-md text-white'
-                                    style={{ backgroundColor: '#810000' }}
-                                    onClick={() => handleInitQuiz()}
-                                >
-                                    Iniciar Cuestionario
-                                </button>
+                                {console.log("??¡?¡?11¡?¡?¡?¡??",dataQuiz.attempts, attemptsUserQuiz.attempts)}
+                                {
+                                    dataQuiz.attempts > attemptsUserQuiz.attempts?(
+                                        <button
+                                            className='btn btn-md text-white'
+                                            style={{ backgroundColor: '#810000' }}
+                                            onClick={() => handleInitQuiz()}
+                                        >
+                                            Iniciar Cuestionario
+                                        </button>
+                                    ):(
+                                        <h5><b>{"Ya no tienes oportunidades en este modulo"}</b></h5>
+                                    )
+                                }
+                                
                             </div>
                         </div>
                     ) : (
@@ -116,7 +133,7 @@ const QuizComponent = ({
                                             : '#000'
                             }}
                         >
-                            {answer}
+                            {answer.description}
                         </div>
                     </li>
                 ))}
