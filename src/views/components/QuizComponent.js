@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import "./styles.css"
 
 const QuizComponent = ({
+    module,
     dataQuiz,
     attemptsUserQuiz,
     questions = [],
@@ -17,7 +18,8 @@ const QuizComponent = ({
     handleNextQuestion,
     handleInitQuiz,
     handleFinishQuiz,
-    handleResetQuestion
+    handleResetQuestion,
+    extraOpportunity
 }) => {
 
     if (quizCompleted) {
@@ -34,9 +36,9 @@ const QuizComponent = ({
                         <>
                             <h2 className='mt-3'>¡No has superado el curso!</h2>
                             <h3 className='my-3'><b>El puntaje mínimo es del 80%, contacta a tu supervisor para más indicaciones.</b></h3>
-                            {console.log("??¡?¡?¡22?¡?¡?¡??",dataQuiz.attempts, attemptsUserQuiz.attempts)}
+                            {console.log("??¡?¡?¡22?¡?¡?¡??", dataQuiz.attempts, attemptsUserQuiz.length, attemptsUserQuiz)}
                             {
-                                dataQuiz.attempts > (attemptsUserQuiz.attempts + 1)?(
+                                dataQuiz.attempts > (attemptsUserQuiz.length + 1) ? (
                                     <button
                                         className='btn btn-sm text-white mb-3'
                                         style={{ backgroundColor: '#810000' }}
@@ -44,7 +46,7 @@ const QuizComponent = ({
                                     >
                                         Repetir Cuestionario
                                     </button>
-                                ):(
+                                ) : (
                                     <h5><b>{"Ya no tienes oportunidades en este modulo"}</b></h5>
                                 )
                             }
@@ -63,12 +65,12 @@ const QuizComponent = ({
                 {
                     questions.length > 0 ? (
                         <div className='jumbotron'>
-                            <h5><b>{"Bienvenido a tu Módulo 1"}</b></h5>
+                            <h5><b>{`Bienvenido a tu ${dataQuiz?.title || ""}`}</b></h5>
                             <p>Marque el o los incisos con la respuesta correcta.</p>
                             <div className='d-flex justify-content-center m-3'>
-                                {console.log("??¡?¡?11¡?¡?¡?¡??",dataQuiz.attempts, attemptsUserQuiz.attempts)}
+                                {console.log("??¡?¡?11¡?¡?¡?¡??", dataQuiz.attempts, attemptsUserQuiz, attemptsUserQuiz.length)}
                                 {
-                                    dataQuiz.attempts > attemptsUserQuiz.attempts?(
+                                    dataQuiz.attempts > attemptsUserQuiz.length ? (
                                         <button
                                             className='btn btn-md text-white'
                                             style={{ backgroundColor: '#810000' }}
@@ -76,11 +78,30 @@ const QuizComponent = ({
                                         >
                                             Iniciar Cuestionario
                                         </button>
-                                    ):(
-                                        <h5><b>{"Ya no tienes oportunidades en este modulo"}</b></h5>
+                                    ) : (
+                                        extraOpportunity?.idUserAttemptsQuiz ? (
+                                            (dataQuiz.attempts + extraOpportunity.attempts) > attemptsUserQuiz.length ? (
+                                                <button
+                                                    className='btn btn-md text-white'
+                                                    style={{ backgroundColor: '#810000' }}
+                                                    onClick={() => handleInitQuiz()}
+                                                >
+                                                    Iniciar Cuestionario
+                                                </button>
+                                            ) : (
+                                                <h5>
+                                                    <b>{"Ya no tienes oportunidades disponibles para este cuestionario"}</b>
+                                                </h5>
+                                            )
+                                        ) : (
+                                            <h5>
+                                                {console.log("NPI ...........", (dataQuiz.attempts + extraOpportunity.attempts))}
+                                                <b>{"Ya no tienes oportunidades disponibles para este cuestionario"}</b>
+                                            </h5>
+                                        )
                                     )
                                 }
-                                
+
                             </div>
                         </div>
                     ) : (

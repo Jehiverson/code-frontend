@@ -12,7 +12,7 @@ import MenuComponent from "../../components/MenuComponent";
 import HeaderComponent from "../../components/HeaderComponent";
 import CountdownComponent from "../../components/CountdownComponent";
 
-import { getAttempts, setDataUserAnswer, setUserQuiz, putUserQuiz } from "../../services/quizFnc.js";
+import { getAttempts, setDataUserAnswer, setUserQuiz, setScoreUser, getExtraOpportunity } from "../../services/quizFnc.js";
 
 const MySwal = withReactContent(Swal);
 
@@ -33,9 +33,10 @@ const CoursePage = () => {
     const [timerRestart, setTimerRestart] = useState(false);
     const [time, setTotalTime] = useState(0)
     const [minimNote, setMinimNote] = useState(0);
-    
+
     const [userData, setUserData] = useState(null);
-    const [attemptsUserQuiz, setAttemptsUserQuiz] = useState({attempt: 1});
+    const [attemptsUserQuiz, setAttemptsUserQuiz] = useState([]);
+    const [extraOpportunityQuiz, setExtraOpportunityQuiz] = useState([]);
 
     const counterRef = useRef(null)
 
@@ -52,15 +53,15 @@ const CoursePage = () => {
     }
 
     const handleAnswerClick = (answerIndex) => {
-        console.log("----1---",answerIndex);
+        console.log("----1---", answerIndex);
         if (userAnswers[currentQuestion] === null) {
-            console.log("----2---",userAnswers);
+            console.log("----2---", userAnswers);
             const isCorrect = questions[currentQuestion].correctIndex.includes(answerIndex);
             setSelectedAnswer(answerIndex);
 
             setUserAnswers((prevUserAnswers) => {
                 const newUserAnswers = [...prevUserAnswers];
-                newUserAnswers[currentQuestion] = isCorrect ? {response: 'correct', index: answerIndex} : {response: 'incorrect', index: answerIndex};
+                newUserAnswers[currentQuestion] = isCorrect ? { response: 'correct', index: answerIndex } : { response: 'incorrect', index: answerIndex };
                 return newUserAnswers;
             });
             console.log("----3---");
@@ -73,8 +74,16 @@ const CoursePage = () => {
     };
 
     const handleNextQuestion = () => {
-        setSelectedAnswer(null);
-        setCurrentQuestion((prevQuestion) => prevQuestion + 1);
+        if (userAnswers[currentQuestion] !== null) {
+            setSelectedAnswer(null);
+            setCurrentQuestion((prevQuestion) => prevQuestion + 1);
+        } else {
+            MySwal.fire({
+                icon: "info",
+                title: "¡Atención!",
+                text: "Debe seleccionar una respuesta"
+            })
+        }
     };
 
     const handleInitQuiz = () => {
@@ -86,69 +95,90 @@ const CoursePage = () => {
     }
 
     const handleFinishQuiz = async () => {
-        // Contar las preguntas no respondidas
-        const unanswered = userAnswers.filter((answer) => answer === null).length;
-        setUnansweredCount(unanswered);
+        const datosUser = JSON.parse(localStorage.getItem("@user"));
+        if (userAnswers[currentQuestion] !== null) {
+            // Contar las preguntas no respondidas
+            const unanswered = userAnswers.filter((answer) => answer === null).length;
+            setUnansweredCount(unanswered);
 
-        // Finalizar el quiz
-        setQuizCompleted(true);
-        setTimerStart(false);
+            // Finalizar el quiz
+            setQuizCompleted(true);
+            setTimerStart(false);
 
-        /* const attemptsUserQuiz = await getAttempts(userData.idUser, questions[0].idQuestion);
-        console.log("INTENTOS DATA",attemptsUserQuiz) */
-        const attemptsUser = attemptsUserQuiz.attempts?(attemptsUserQuiz.attempts + 1):1;
-        let dataQuiz = {idUser:userData.idUser, idQuiz: questions[0].idQuestion, attempts:attemptsUser};
-        let dataInsertQuiz = [];
+            /* const attemptsUserQuiz = await getAttempts(userData.idUser, questions[0].idQuestion);
+            console.log("INTENTOS DATA",attemptsUserQuiz) */
+            const attemptsUser = attemptsUserQuiz.length ? (attemptsUserQuiz.length + 1) : 1;
+            let dataQuiz = { idUser: datosUser.idUser, idQuiz: questions[0].idQuestion, attempts: attemptsUser };
+            let dataInsertQuiz = [];
 
-        userAnswers.map(((item, index) => {
-            console.log(item);
-            const questionData = questions[index];
-            const answerData = questions[index].answers[item.index];
+            userAnswers.map(((item, index) => {
+                console.log(item);
+                const questionData = questions[index];
+                const answerData = questions[index].answers[item.index];
 
-            dataInsertQuiz.push({
-                idUser:userData.idUser,
-                idQuestion: questionData.idQuestion,
-                idAnswer: answerData.idAnswer,
-                attempt:attemptsUserQuiz.attempts + 1
+                dataInsertQuiz.push({
+                    idUser: datosUser.idUser,
+                    idQuestion: questionData.idQuestion,
+                    idAnswer: answerData.idAnswer,
+                    attempt: attemptsUser
+                });
+
+            }));
+
+            let timerInterval;
+            Swal.fire({
+                title: "Validando respuestas...",
+                timer: 5000,
+                timerProgressBar: true
             });
 
-        }));
+            const dataAnswers = await setDataUserAnswer(dataInsertQuiz);
+            const dataUserQuiz = await setUserQuiz(dataQuiz);
 
-        let timerInterval;
-        Swal.fire({
-        title: "Validando respuestas...",
-        timer: 5000,
-        timerProgressBar: true
-        });
-
-        const dataAnswers = await setDataUserAnswer(dataInsertQuiz);
-        const dataUserQuiz = attemptsUserQuiz.attempts? await putUserQuiz(userData.idUser, questions[0].idQuestion, {attempts: attemptsUser}) : await setUserQuiz(dataQuiz);
-
-        if(dataAnswers && dataUserQuiz){
-            Swal.fire({
-                icon: "success",
-                title: "Completado",
-                text: "Tus resultados se mostraran en pantalla",
-              });
-        }else{
-            Swal.fire({
-                icon: "error",
-                title: "Error",
-                text: "No se han podido registrar tus datos prueba mas tarde.",
-              });
+            if (dataAnswers && dataUserQuiz) {
+                const saveScore = await setScoreUser({
+                    idQuiz: id,
+                    idUser: datosUser.idUser,
+                    quizTime: time,
+                    score: correctCount
+                });
+                console.log("[ TIME SCORE ] => ", saveScore);
+                Swal.fire({
+                    icon: "success",
+                    title: "Proceso completado",
+                });
+            } else {
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: "No se han podido registrar tus datos prueba mas tarde.",
+                });
+            }
+        } else {
+            MySwal.fire({
+                icon: "info",
+                title: "¡Atención!",
+                text: "Debe seleccionar una respuesta"
+            })
         }
     };
 
-    const handleResetQuestion = () => {
-        setTotalTime(900);
-        setTimerRestart(true);
-        setCurrentQuestion(-1);
-        setQuizCompleted(false);
-        setCorrectCount(0);
-        setIncorrectCount(0);
-        setUnansweredCount(0);
-        setSelectedAnswer(null);
-        setUserAnswers(Array(questions.length).fill(null));
+    const handleResetQuestion = async () => {
+        try {
+            const attemptsUserQuizget = await getAttempts(userData.idUser, id);
+            setAttemptsUserQuiz(attemptsUserQuizget.data);
+            setTotalTime(900);
+            setTimerRestart(true);
+            setCurrentQuestion(-1);
+            setQuizCompleted(false);
+            setCorrectCount(0);
+            setIncorrectCount(0);
+            setUnansweredCount(0);
+            setSelectedAnswer(null);
+            setUserAnswers(Array(questions.length).fill(null));
+        } catch (error) {
+            console.log("error")
+        }
     }
 
     const getInfoModule = async () => {
@@ -157,26 +187,26 @@ const CoursePage = () => {
             const datosUser = JSON.parse(localStorage.getItem("@user"));
             console.log("Usuario", datosUser);
             setUserData(datosUser);
-        
-            const quizReq = await axios.get(`http://localhost:4500/quiz/v1/quiz/${id}`);
+
+            const quizReq = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/quiz/${id}`);
             console.log("Q", quizReq);
             if (quizReq?.data) {
                 let duration = quizReq.data.durationTime * 60 || 0
                 setDataQuiz(quizReq.data)
                 setTotalTime(duration)
 
-                const presentationReq = await axios.get(`http://localhost:4500/quiz/v1/presentation/quiz/${id}`)
+                const presentationReq = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/presentation/quiz/${id}`)
                 if (presentationReq?.data) {
                     setDataPresentation(presentationReq.data?.PresentationItems || [])
 
-                    const questionReq = await axios.get(`http://localhost:4500/quiz/v1/question/quiz/${id}`)
+                    const questionReq = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/question/quiz/${id}`)
                     if (questionReq?.data) {
                         let array = []
                         questionReq.data.forEach((item) => {
                             let arrayAnswer = []
                             let arrayCorrectAnswer = []
                             item.Answers.forEach((answer, index) => {
-                                arrayAnswer.push({idAnswer: answer.idAnswers, description: answer.description})
+                                arrayAnswer.push({ idAnswer: answer.idAnswers, description: answer.description })
                                 if (answer.isCorrect) arrayCorrectAnswer.push(index)
                             })
 
@@ -191,10 +221,13 @@ const CoursePage = () => {
                         console.log(questionReq);
 
                         setDataQuestion(array);
-                        setUserAnswers(Array(array.length).fill(null));
+                        setUserAnswers(Array(array.length).fill(null))
+                        console.log("USER DATA ==>", datosUser);
                         const attemptsUserQuizget = await getAttempts(datosUser.idUser, quizReq.data.idQuiz);
-                        console.log("INTENTOS DATA",attemptsUserQuizget.data, quizReq.data)
+                        const extraOpportunity = await getExtraOpportunity(datosUser.idUser, id);
+                        console.log("INTENTOS DATA", attemptsUserQuizget)
                         setAttemptsUserQuiz(attemptsUserQuizget.data);
+                        setExtraOpportunityQuiz(extraOpportunity.data);
                     }
                 }
             }
@@ -202,7 +235,7 @@ const CoursePage = () => {
             console.log(error)
         }
     }
-
+    console.log("EXTRA =============> ", extraOpportunityQuiz);
     useEffect(() => {
         getInfoModule()
     }, [])
@@ -262,6 +295,7 @@ const CoursePage = () => {
                         content={
                             <div className="container border p-2">
                                 <QuizComponent
+                                    module={dataQuiz?.title || ""}
                                     dataQuiz={dataQuiz}
                                     attemptsUserQuiz={attemptsUserQuiz}
                                     counterRef={counterRef}
@@ -287,6 +321,7 @@ const CoursePage = () => {
                                     handleInitQuiz={handleInitQuiz}
                                     handleFinishQuiz={handleFinishQuiz}
                                     handleResetQuestion={handleResetQuestion}
+                                    extraOpportunity={extraOpportunityQuiz}
                                 />
                             </div>
                         }

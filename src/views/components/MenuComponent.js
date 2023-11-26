@@ -14,8 +14,14 @@ const MenuComponent = () => {
                         <li className="nav-item px-5 border-2 border-end border-black">
                             <a className="nav-link fs-4 fw-bold text-black option" href="#" onClick={() => navigate("/profile")}>Perfil</a>
                         </li>
+                        <li className="nav-item px-5 border-2 border-end border-black">
+                            <a className="nav-link fs-4 fw-bold text-black option" href="#" onClick={() => navigate("/avances")}>Avances</a>
+                        </li>
                         <li className="nav-item px-5">
-                            <a className="nav-link fs-4 fw-bold text-black option" href="#!" onClick={() => navigate("/login")}>Salir</a>
+                            <a className="nav-link fs-4 fw-bold text-black option" href="#!" onClick={() => {
+                                localStorage.removeItem("@user")
+                                navigate("/login")
+                            }}>Salir</a>
                         </li>
                     </ul>
                 </div>

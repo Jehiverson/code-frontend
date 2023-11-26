@@ -3,29 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import ReactPlayer from "react-player";
 
-// const files = [
-//     { filename: "bknjetwsdgesqimwo3mf", type: "img" },
-//     { filename: "rngiggrbj4eyi7ujyqp7", type: "img" },
-//     { filename: "ujn2bijaho7kip4sakcy", type: "img" },
-//     { filename: "awbvcnl1ud2pnvnonhz2", type: "img" },
-//     { filename: "tivlkwujiwgpwunhmswp", type: "img" },
-//     { filename: "ezjae8dhjqo4s9jinnkl", type: "img" },
-//     { filename: "usae3yvehfqtmb41rung", type: "img" },
-//     { filename: "pguduygsdzsnmmjvvj8v", type: "img" },
-//     { filename: "wpsusfmazjvnpvpqagbs", type: "img" },
-//     { filename: "arztl56kw6g2rqgdl5ei", type: "img" },
-//     { filename: "zfwava8acd7xqiepb4ue", type: "img" },
-//     { filename: "efxuluqclbswghg7nwmx", type: "img" },
-//     { filename: "ikdh1uf1xbrss9ploq9l", type: "img" },
-//     { filename: "spmt6nr9wmn479icqq7b", type: "img" },
-//     { filename: "ze8kjglrsagcnkokug3y", type: "img" },
-//     { filename: "einsglt4zmaaken9klui", type: "img" },
-//     { filename: "dxyihurxplfnwuunm7ek", type: "img" },
-//     { filename: "kn0ysytncutfvm7gjtgl", type: "img" },
-//     { filename: "eq4uxgodbnx1c1cm0dca", type: "img" },
-//     // { filename: "dtwh0lbd7nxsvmhohozp.mp4", type: "video" },
-// ]
-
 const Presentation = ({ files = [] }) => {
     const [currentSlide, setCurrentSlide] = useState(0);
     const videoRef = useRef(null);
@@ -46,9 +23,9 @@ const Presentation = ({ files = [] }) => {
                     files.length > 0 ? (
                         <Carousel
                             cellAlign="center"
-                            adaptiveHeight={true}
+                            adaptiveHeight={false}
                             adaptiveHeightAnimation={true}
-                            beforeSlide={(currentSlide, endSlide) => setCurrentSlide(currentSlide)}
+                            beforeSlide={(currentSlide) => setCurrentSlide(currentSlide)}
                             defaultControlsConfig={{
                                 nextButtonText: <FiChevronRight />,
                                 prevButtonText: <FiChevronLeft />,
@@ -60,12 +37,16 @@ const Presentation = ({ files = [] }) => {
                                 files.map(item => (
                                     item.idTypePresentation === "image" ? (
                                         <img
+                                            key={`IMG-${item.idPresentationItem}`}
                                             className="img-fluid"
+                                            loading="lazy"
                                             // src={`https://res.cloudinary.com/dwjgahuls/image/upload/f_auto,q_auto/v1/CBC/${item.url}`}
                                             src={item.url}
+                                            alt="PRESENTATION"
                                         />
                                     ) : (
                                         <ReactPlayer
+                                            key={`VID-${item.idPresentationItem}`}
                                             ref={videoRef}
                                             // url='https://res.cloudinary.com/dwjgahuls/video/upload/v1700111493/CBC/dtwh0lbd7nxsvmhohozp.mp4'
                                             src={item.url}

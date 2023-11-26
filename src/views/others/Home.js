@@ -3,12 +3,7 @@ import CourseCard from "../components/courseCard";
 import HeaderComponent from "../components/HeaderComponent";
 import MenuComponent from "../components/MenuComponent";
 import axios from "axios";
-// import COURSE1 from "../../assets/img/courses/PBS-cursos-01.png";
-// import COURSE2 from "../../assets/img/courses/PBS-cursos-02.png";
-// import COURSE3 from "../../assets/img/courses/PBS-cursos-03.png";
-// import COURSE4 from "../../assets/img/courses/PBS-cursos-04.png";
-// import COURSE5 from "../../assets/img/courses/PBS-cursos-05.png";
-// import COURSE6 from "../../assets/img/courses/PBS-cursos-06.png";
+
 import "./styles.css"
 
 const Home = () => {
@@ -17,7 +12,7 @@ const Home = () => {
 
     const getDataModules = async () => {
         try {
-            const request = await axios.get("http://localhost:4500/quiz/v1/quiz");
+            const request = await axios.get("https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/quiz");
             setModules(request.data)
             setIsLoading(false)
         } catch (error) {

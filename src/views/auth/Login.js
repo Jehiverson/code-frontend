@@ -4,6 +4,7 @@ import FORM from "../../assets/img/Form.png";
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import axios from "axios";
+import { getAgencyService, getAreasService, getDivisionService, loginService, registerService } from "../services/userFnc";
 const MySwal = withReactContent(Swal)
 
 const Login = () => {
@@ -27,7 +28,7 @@ const Login = () => {
     const handleLogin = async () => {
         try {
             setIsLoading(true)
-            const login = await axios.post("http://localhost:4500/settings/v1/user/login", { user, password })
+            const login = await loginService(user, password)
             console.log("LOGIN", login.data.userData.dataUser);
             if (!login.data?.error) {
                 localStorage.setItem("@user", JSON.stringify(login.data.userData.dataUser));
@@ -78,7 +79,7 @@ const Login = () => {
                 });
             } else {
                 setIsLoading(true)
-                const register = await axios.post("http://localhost:4500/settings/v1/user", {
+                const register = await registerService({
                     idRole: 1,
                     name: data.userName,
                     user: data.userValue,
@@ -87,7 +88,11 @@ const Login = () => {
                 console.log("[ REGISTER ]", register.data);
                 if (!register.data?.error) {
                     setIsLoading(false)
-                    navigate("/home")
+                    MySwal.fire({
+                        title: "Completado",
+                        text: "El usuario fue creado con exito",
+                        icon: "success"
+                    });
                 } else {
                     setIsLoading(false)
                     MySwal.fire({
@@ -104,7 +109,7 @@ const Login = () => {
 
     const getDivisions = async () => {
         try {
-            const request = await axios.get("http://localhost:4500/settings/v1/division")
+            const request = await getDivisionService();
             if (!request.data?.error) {
                 console.log("[ DIVISIONS ] =>", request.data)
                 setDataDivision(request.data)
@@ -122,7 +127,7 @@ const Login = () => {
 
     const getAreas = async () => {
         try {
-            const request = await axios.get("http://localhost:4500/settings/v1/area")
+            const request = await getAreasService()
             if (!request.data?.error) {
                 console.log("[ AREAS ] =>", request.data)
                 setDataArea(request.data)
@@ -140,7 +145,7 @@ const Login = () => {
 
     const getAgency = async () => {
         try {
-            const request = await axios.get(`http://localhost:4500/settings/v1/agency/area/${areaSelected}`)
+            const request = await getAgencyService(areaSelected)
             if (!request.data?.error) {
                 console.log("[ AGENCY AREAS ] =>", request.data)
                 setDataAgency(request.data)
