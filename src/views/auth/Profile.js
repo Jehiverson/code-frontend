@@ -1,9 +1,7 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import FORM from "../../assets/img/Form.png";
-import Swal from 'sweetalert2'
-import withReactContent from 'sweetalert2-react-content'
-import axios from "axios";
+import Swal from 'sweetalert2';
+import withReactContent from 'sweetalert2-react-content';
 import HeaderComponent from "../components/HeaderComponent";
 import MenuComponent from "../components/MenuComponent";
 import "./style.css"

@@ -6,6 +6,7 @@ import Home from "./views/others/Home";
 import CoursePage from "./views/others/Course/CoursePage";
 import ProgressIndex from "./views/others/Progress";
 import ProgressGeneral from "./views/others/Progress/General";
+import GeneralAdvance from "./views/others/Progress/General/components/GeneralAdvance";
 import ProgressCenter from "./views/others/Progress/Center";
 
 import HEADER from "./assets/img/Header2.png";
@@ -26,6 +27,7 @@ function App() {
             <Route path="/course/:id" element={<CoursePage />} />
             <Route path="/avances" element={<ProgressIndex />} />
             <Route path="/avances/general" element={<ProgressGeneral />} />
+            <Route path="/avances/general/detail" element={<GeneralAdvance />} />
             <Route path="/avances/centro" element={<ProgressCenter />} />
           </Routes>
         </BrowserRouter>

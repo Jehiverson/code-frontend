@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-const CountdownComponent = ({ onTimeout, completeTime, restart = false, totalTime = 900, quizCompleted }) => {
+const CountdownComponent = ({ onTimeout, completeTime, restart = false, totalTime = 900, quizCompleted, finalTime }) => {
     const [time, setTime] = useState(0); // 15 minutos en segundos
     // const [running, setRunning] = useState(false);
     const intervalRef = useRef(null);
@@ -19,6 +19,7 @@ const CountdownComponent = ({ onTimeout, completeTime, restart = false, totalTim
                 });
             }, 1000);
         } else {
+            finalTime(time)
             clearInterval(intervalRef.current);
         }
 

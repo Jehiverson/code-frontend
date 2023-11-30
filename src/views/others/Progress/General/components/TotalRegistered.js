@@ -1,5 +1,7 @@
 import Chart from 'react-apexcharts'
+import { useNavigate } from 'react-router-dom';
 const TotalRegistered = ({data}) => {
+  const navigation = useNavigate()
   console.log(data);
   const options = {
     chart: {
@@ -42,11 +44,11 @@ const TotalRegistered = ({data}) => {
             <h6><b className="text-muted">Cuestionarios Reprobados:</b> {data?.reproved || 0}</h6>
 
             <h4 className="fw-bold">Resumen por Área</h4>
-            <h6><b className="text-muted">Usuarios en Área Centro - Centro:</b> 46</h6>
-            <h6><b className="text-muted">Usuarios en Área Centro - Norte:</b> 42</h6>
-            <h6><b className="text-muted">Usuarios en Área Centro - Sor:</b> 42</h6>
-            <h6><b className="text-muted">Usuarios en Área Centro - Occidente:</b> 43</h6>
-            <h6><b className="text-muted">Usuarios en Área Cuentas Clave:</b> 22</h6>
+            {
+              data.usersByArea.map((item, index) => (
+                <h6 key={`tU-${index}`}><b className="text-muted">Usuarios en {item.name}:</b> {item.total_usuarios}</h6>
+              ))
+            }
           </div>
           <div className="col-md-7 p-3">
             <div className='cointainer rounded-4 py-2 px-3' style={{ backgroundColor: "#CCCCCC" }}>
@@ -54,7 +56,7 @@ const TotalRegistered = ({data}) => {
                 <h5 className='text-white my-2 text-center'>{"Total inscritos"}</h5>
               </div>
               <Chart options={options} series={[data?.totaInscritos || 0]} type='pie' height={400} />
-              <div className='btn rounded-pill my-2 d-flex justify-content-center' style={{ backgroundColor: "#810000" }}>
+              <div onClick={() => navigation("/avances/general/detail")} className='btn rounded-pill my-2 d-flex justify-content-center btn' style={{ backgroundColor: "#810000" }}>
                 <h5 className='text-white my-1 text-center'>{"Avances generales"}</h5>
               </div>
               <div className='btn rounded-pill d-flex justify-content-center' style={{ backgroundColor: "#810000" }}>

@@ -37,7 +37,17 @@ const ChartComponent = ({name, serie}) => {
         <div className='rounded-pill my-2 d-flex justify-content-center' style={{ backgroundColor: "#555555" }}>
           <h5 className='text-white my-2 text-center'>Total usuarios {name}</h5>
         </div>
+        <div className='d-flex justify-content-center my-3'>
+          <div className='px-5 py-2 border border-2 rounded-4' style={{backgroundColor: "#810000"}}>
+            <span className='fw-bold text-white'>{"% AVENCE"}</span>
+          </div>
+        </div>
         <Chart options={options} series={serie} type='pie' height={400} />
+        <div className='d-flex justify-content-center mt-3'>
+          <div className='px-5 py-2 border border-2 rounded-4 btn' style={{backgroundColor: "#810000"}}>
+            <span className='fw-bold text-white'>{"DETALLE X COLABORADOR"}</span>
+          </div>
+        </div>
       </div>
     </div>
   )

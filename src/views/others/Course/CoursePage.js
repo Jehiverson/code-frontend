@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import Swal from 'sweetalert2';
 import withReactContent from 'sweetalert2-react-content';
 import { useParams } from "react-router-dom";
-import axios from "axios";
 
 import Presentation from "./Presentation";
 import Accordion from "../../components/Accordion";
@@ -12,7 +11,17 @@ import MenuComponent from "../../components/MenuComponent";
 import HeaderComponent from "../../components/HeaderComponent";
 import CountdownComponent from "../../components/CountdownComponent";
 
-import { getAttempts, setDataUserAnswer, setUserQuiz, setScoreUser, getExtraOpportunity } from "../../services/quizFnc.js";
+import {
+    getAttempts,
+    setDataUserAnswer,
+    setUserQuiz,
+    setScoreUser,
+    getExtraOpportunity,
+    getUserModuleResult,
+    getQuizService,
+    getPresentationService,
+    getQuestionsService
+} from "../../services/quizFnc.js";
 
 const MySwal = withReactContent(Swal);
 
@@ -32,11 +41,13 @@ const CoursePage = () => {
     const [timerStart, setTimerStart] = useState(false);
     const [timerRestart, setTimerRestart] = useState(false);
     const [time, setTotalTime] = useState(0)
+    const [finalTime, setFinalTime] = useState(0)
     const [minimNote, setMinimNote] = useState(0);
 
     const [userData, setUserData] = useState(null);
     const [attemptsUserQuiz, setAttemptsUserQuiz] = useState([]);
     const [extraOpportunityQuiz, setExtraOpportunityQuiz] = useState([]);
+    const [previousResults, setPreviousResults] = useState([]);
 
     const counterRef = useRef(null)
 
@@ -108,7 +119,12 @@ const CoursePage = () => {
             /* const attemptsUserQuiz = await getAttempts(userData.idUser, questions[0].idQuestion);
             console.log("INTENTOS DATA",attemptsUserQuiz) */
             const attemptsUser = attemptsUserQuiz.length ? (attemptsUserQuiz.length + 1) : 1;
-            let dataQuiz = { idUser: datosUser.idUser, idQuiz: questions[0].idQuestion, attempts: attemptsUser };
+            let dataQuiz = {
+                idUser: datosUser.idUser,
+                idQuiz: questions[0].idQuestion,
+                attempts: attemptsUser,
+                aproved: correctCount >= minimNote ? 1 : 0
+            };
             let dataInsertQuiz = [];
 
             userAnswers.map(((item, index) => {
@@ -139,7 +155,7 @@ const CoursePage = () => {
                 const saveScore = await setScoreUser({
                     idQuiz: id,
                     idUser: datosUser.idUser,
-                    quizTime: time,
+                    quizTime: `${Math.floor(finalTime / 60)}:${(finalTime % 60).toString().padStart(2, '0')}`,
                     score: correctCount
                 });
                 console.log("[ TIME SCORE ] => ", saveScore);
@@ -183,23 +199,23 @@ const CoursePage = () => {
 
     const getInfoModule = async () => {
         try {
-            console.log("GET DATOS")
             const datosUser = JSON.parse(localStorage.getItem("@user"));
-            console.log("Usuario", datosUser);
             setUserData(datosUser);
 
-            const quizReq = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/quiz/${id}`);
-            console.log("Q", quizReq);
+            const quizReq = await getQuizService(id);
             if (quizReq?.data) {
                 let duration = quizReq.data.durationTime * 60 || 0
                 setDataQuiz(quizReq.data)
                 setTotalTime(duration)
-
-                const presentationReq = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/presentation/quiz/${id}`)
+                const requestResults = await getUserModuleResult(datosUser.idUser, id)
+                if (requestResults?.data) {
+                    setPreviousResults(requestResults.data)
+                }
+                const presentationReq = await getPresentationService(id)
                 if (presentationReq?.data) {
                     setDataPresentation(presentationReq.data?.PresentationItems || [])
 
-                    const questionReq = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/question/quiz/${id}`)
+                    const questionReq = await getQuestionsService(id)
                     if (questionReq?.data) {
                         let array = []
                         questionReq.data.forEach((item) => {
@@ -218,14 +234,10 @@ const CoursePage = () => {
                             })
                         })
 
-                        console.log(questionReq);
-
                         setDataQuestion(array);
                         setUserAnswers(Array(array.length).fill(null))
-                        console.log("USER DATA ==>", datosUser);
                         const attemptsUserQuizget = await getAttempts(datosUser.idUser, quizReq.data.idQuiz);
                         const extraOpportunity = await getExtraOpportunity(datosUser.idUser, id);
-                        console.log("INTENTOS DATA", attemptsUserQuizget)
                         setAttemptsUserQuiz(attemptsUserQuizget.data);
                         setExtraOpportunityQuiz(extraOpportunity.data);
                     }
@@ -235,7 +247,7 @@ const CoursePage = () => {
             console.log(error)
         }
     }
-    console.log("EXTRA =============> ", extraOpportunityQuiz);
+
     useEffect(() => {
         getInfoModule()
     }, [])
@@ -281,6 +293,7 @@ const CoursePage = () => {
                             completeTime={completeTimer}
                             totalTime={time}
                             restart={timerRestart}
+                            finalTime={setFinalTime}
                         />
                     </div>
                 </div>
@@ -322,6 +335,7 @@ const CoursePage = () => {
                                     handleFinishQuiz={handleFinishQuiz}
                                     handleResetQuestion={handleResetQuestion}
                                     extraOpportunity={extraOpportunityQuiz}
+                                    enableQuiz={previousResults.length === 0 ? true : false}
                                 />
                             </div>
                         }

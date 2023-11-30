@@ -19,7 +19,8 @@ const QuizComponent = ({
     handleInitQuiz,
     handleFinishQuiz,
     handleResetQuestion,
-    extraOpportunity
+    extraOpportunity,
+    enableQuiz
 }) => {
 
     if (quizCompleted) {
@@ -68,37 +69,43 @@ const QuizComponent = ({
                             <h5><b>{`Bienvenido a tu ${dataQuiz?.title || ""}`}</b></h5>
                             <p>Marque el o los incisos con la respuesta correcta.</p>
                             <div className='d-flex justify-content-center m-3'>
-                                {console.log("??¡?¡?11¡?¡?¡?¡??", dataQuiz.attempts, attemptsUserQuiz, attemptsUserQuiz.length)}
+                                {console.log("??¡?¡?11¡?¡?¡?¡??", enableQuiz, dataQuiz.attempts, attemptsUserQuiz, attemptsUserQuiz.length)}
                                 {
-                                    dataQuiz.attempts > attemptsUserQuiz.length ? (
-                                        <button
-                                            className='btn btn-md text-white'
-                                            style={{ backgroundColor: '#810000' }}
-                                            onClick={() => handleInitQuiz()}
-                                        >
-                                            Iniciar Cuestionario
-                                        </button>
-                                    ) : (
-                                        extraOpportunity?.idUserAttemptsQuiz ? (
-                                            (dataQuiz.attempts + extraOpportunity.attempts) > attemptsUserQuiz.length ? (
-                                                <button
-                                                    className='btn btn-md text-white'
-                                                    style={{ backgroundColor: '#810000' }}
-                                                    onClick={() => handleInitQuiz()}
-                                                >
-                                                    Iniciar Cuestionario
-                                                </button>
+                                    enableQuiz ? (
+                                        dataQuiz.attempts > attemptsUserQuiz.length ? (
+                                            <button
+                                                className='btn btn-md text-white'
+                                                style={{ backgroundColor: '#810000' }}
+                                                onClick={() => handleInitQuiz()}
+                                            >
+                                                Iniciar Cuestionario
+                                            </button>
+                                        ) : (
+                                            extraOpportunity?.idUserAttemptsQuiz ? (
+                                                (dataQuiz.attempts + extraOpportunity.attempts) > attemptsUserQuiz.length ? (
+                                                    <button
+                                                        className='btn btn-md text-white'
+                                                        style={{ backgroundColor: '#810000' }}
+                                                        onClick={() => handleInitQuiz()}
+                                                    >
+                                                        Iniciar Cuestionario
+                                                    </button>
+                                                ) : (
+                                                    <h5>
+                                                        <b>{"Ya no tienes oportunidades disponibles para este cuestionario"}</b>
+                                                    </h5>
+                                                )
                                             ) : (
                                                 <h5>
+                                                    {console.log("NPI ...........", (dataQuiz.attempts + extraOpportunity.attempts))}
                                                     <b>{"Ya no tienes oportunidades disponibles para este cuestionario"}</b>
                                                 </h5>
                                             )
-                                        ) : (
-                                            <h5>
-                                                {console.log("NPI ...........", (dataQuiz.attempts + extraOpportunity.attempts))}
-                                                <b>{"Ya no tienes oportunidades disponibles para este cuestionario"}</b>
-                                            </h5>
                                         )
+                                    ) : (
+                                        <h5>
+                                            <b>{"Ya has aprobado este módulo"}</b>
+                                        </h5>
                                     )
                                 }
 

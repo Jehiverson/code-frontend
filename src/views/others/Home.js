@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import CourseCard from "../components/courseCard";
 import HeaderComponent from "../components/HeaderComponent";
 import MenuComponent from "../components/MenuComponent";
-import axios from "axios";
+import { getModulesService } from "../services/userFnc";
 
 import "./styles.css"
 
@@ -12,7 +12,7 @@ const Home = () => {
 
     const getDataModules = async () => {
         try {
-            const request = await axios.get("https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/quiz");
+            const request = await getModulesService();
             setModules(request.data)
             setIsLoading(false)
         } catch (error) {

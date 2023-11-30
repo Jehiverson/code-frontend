@@ -46,3 +46,12 @@ export const getAgencyService = async (areaSelected) => {
     return null
   }
 }
+
+export const getModulesService = async () => {
+  try {
+    const data = await axios.get("https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/quiz");
+    return data
+  } catch (error) {
+    return null
+  }
+}

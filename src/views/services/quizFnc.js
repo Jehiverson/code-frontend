@@ -1,9 +1,27 @@
 import axios from "axios";
 
-export const getModulesService = async () => {
+export const getQuizService = async (id) => {
     try {
-        const request = await axios.get("https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/quiz");
+        const request = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/quiz/${id}`);
         return request
+    } catch (error) {
+        return null
+    }
+}
+
+export const getPresentationService = async (id) => {
+    try {
+        const data = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/presentation/quiz/${id}`)
+        return data
+    } catch (error) {
+        return null
+    }
+}
+
+export const getQuestionsService = async (id) => {
+    try {
+        const data = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/question/quiz/${id}`)
+        return data
     } catch (error) {
         return null
     }
@@ -26,6 +44,15 @@ export const getExtraOpportunity = async (idUser, idQuiz) => {
         return extraData;
     } catch (error) {
         return 0
+    }
+}
+
+export const getUserModuleResult = async (idUser, idQuiz) => {
+    try {
+        const data = await axios.get(`https://jjhxj3zj-4500.use.devtunnels.ms/quiz/v1/user/${idUser}/quiz/${idQuiz}/aproved`)
+        return data
+    } catch (error) {
+        return null
     }
 }
 
