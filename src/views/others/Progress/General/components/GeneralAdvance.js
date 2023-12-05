@@ -24,15 +24,15 @@ const GeneralAdvance = () => {
     },
     {
       name: 'División',
-      selector: row => row?.idDivision || "N/A",
+      selector: row => row?.Agency?.Area?.Division.name || "N/A",
     },
     {
       name: 'Agencia',
-      selector: row => row?.idAgency || "N/A",
+      selector: row => row?.Agency.name || "N/A",
     },
     {
       name: 'Centro',
-      selector: row => row?.name || "N/A",
+      selector: row => row?.Agency?.Area.name || "N/A",
     },
   ];
 
@@ -48,34 +48,33 @@ const GeneralAdvance = () => {
   }
 
   const ExpandedComponent = ({data}) => {
-    console.log(data);
     return(
       <div className='container'>
         <div className='row'>
           {
             data.UserQuiz.length > 0 ? (
-              data.UserQuiz.map(quiz => {
-                if (quiz.aproved === 1) {
-                  return (
-                    <div className='col-lg-3 col-md-6 col-sm-12 my-2'>
-                      <div className='card'>
-                        <div className='card-body'>
-                          <div className='text-center'>
-                            <h6><span className='fw-bold'>{quiz.Quiz.title}</span></h6>
-                            <h5>{quiz?.score || 80}</h5>
+              (data.UserQuiz.some(q => q.aproved === 1)) ? (
+                data.UserQuiz.map((quiz, index) => {
+                  if (quiz.aproved === 1) {
+                    return (
+                      <div key={`MOD-${data.user}-${index}`} className='col-lg-3 col-md-6 col-sm-12 my-2'>
+                        <div className='card'>
+                          <div className='card-body'>
+                            <div className='text-center'>
+                              <h6><span className='fw-bold'>{quiz.Quiz.title}</span></h6>
+                              <h5>{(quiz?.UserScoreQuiz?.score * 10) || 80}</h5>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                } else {
-                  return (
-                    <div className='text-center my-5'>
-                      <h6 className='text-muted'>{`${data.user} no tiene ningún módulo aprovado`}</h6>
-                    </div>
-                  )
-                }
-              })
+                    )
+                  }
+                })
+              ) : (
+                <div className='text-center my-5'>
+                  <h6 className='text-muted'>{`${data.user} no tiene ningún módulo aprovado`}</h6>
+                </div>
+              )
             ) : (
               <div className='text-center my-5'>
                 <h6 className='text-muted'>{`${data.user} no ha realizado ningún custionario`}</h6>
@@ -112,6 +111,7 @@ const GeneralAdvance = () => {
             paginationServer
             data={data}
             columns={columns}
+            noDataComponent={<div className='text-center'>{"cargando..."}</div>}
             expandableRows
             expandableRowsComponent={ExpandedComponent}
             customStyles={customStyles}

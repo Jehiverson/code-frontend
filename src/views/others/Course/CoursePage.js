@@ -150,11 +150,10 @@ const CoursePage = () => {
 
             const dataAnswers = await setDataUserAnswer(dataInsertQuiz);
             const dataUserQuiz = await setUserQuiz(dataQuiz);
-
-            if (dataAnswers && dataUserQuiz) {
+            console.log("[ dataUserQuiz ] /* ESTE ES EL DEL IDUSERQUIZ */ ===========>", dataUserQuiz);
+            if (dataAnswers?.data && dataUserQuiz?.data) {
                 const saveScore = await setScoreUser({
-                    idQuiz: id,
-                    idUser: datosUser.idUser,
+                    idUserQuiz: dataUserQuiz.data.idUserQuiz,
                     quizTime: `${Math.floor(finalTime / 60)}:${(finalTime % 60).toString().padStart(2, '0')}`,
                     score: correctCount
                 });
